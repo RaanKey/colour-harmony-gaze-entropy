@@ -1,122 +1,144 @@
-The Perceptual Architecture of Aesthetic Choice
-How Colour Harmony Shapes Visual Preference Through Gaze Entropy
-Under review at Nature Human Behaviour
+# Color Harmony Study -- Python Analysis Pipeline
 
-Overview
-This repository contains the analysis code and data for a two-study investigation of how computational colour harmony shapes aesthetic preference, and whether gaze entropy mediates this relationship.
-•Study 1 (N = 180): Online psychophysics with preference and harmony ratings across four re-colouring conditions (+Harmony, Original, −Harmony, Filler).
-•Study 2 (N = 45): Laboratory eye-tracking measuring gaze entropy during 4-second free viewing (32,549 fixations).
-Key finding: Computational harmony scores positively predict aesthetic preference (r = 0.148) and gaze entropy (r = 0.251), but gaze entropy does not statistically mediate the harmony–preference link (indirect effect ab = −0.002, 95% CI [−0.005, 0.001]).
+Complete Python analysis pipeline for the study on color harmony in visual art.
 
-Repository Structure
-.
-|-- data/
-|   |-- study1_data.csv              # Study 1 trial-level behavioural data (12,960 rows)
-|   |-- study2_fixation_data.csv     # Study 2 fixation-level eye-tracking data (32,549 rows)
-|   |-- study2_trial_data.csv        # Study 2 trial-level data (2,700 rows)
-|
-|-- analysis_study1.py               # Study 1: H1–H3 statistical analyses
-|-- analysis_study2.py               # Study 2: gaze entropy, Bayesian mediation (H4)
-|-- color_features.py                # Colour-space conversions & harmony score computation
-|-- power_analysis.py                # Simulation-based power analysis
-|-- config.py                        # Global constants (D65 white point, colour matrices)
-|-- run_all.py                       # Master script: executes full analysis pipeline
-|-- requirements.txt                 # Python dependencies
-Data Description
-study1_data.csv — 12,960 observations × 17 variables
-Variable	Description
-participant_id	Participant identifier (0–179)
-stimulus_id	Palette identifier (0–199)
-condition	Re-colouring condition (+Harmony, −Harmony, Original, Filler)
-expertise	0 = novice, 1 = expert
-harmony_score	Computational harmony score (raw)
-circvar, chroma, lcontrast, deltaE00	Colour features (raw)
-*_z	Z-scored colour features
-preference	Aesthetic preference rating (0–100)
-harmony_rating	Perceived harmony rating (0–100)
-rt	Response time (ms)
-study2_trial_data.csv — 2,700 observations × 5 variables
-Variable	Description
-participant_id	Participant identifier (0–44)
-stimulus_id	Palette identifier (0–59)
-harmony_score_z	Z-scored harmony score
-entropy	Spatial gaze entropy (Shannon, 20×15 grid)
-preference	Aesthetic preference rating (0–100)
-expertise	0 = novice, 1 = expert
-study2_fixation_data.csv — 32,549 fixations × 7 variables
-Variable	Description
-participant_id, stimulus_id	Trial identifiers
-fixation_id	Fixation sequence number
-x, y	Normalised fixation coordinates [0, 1]
-duration	Fixation duration (ms)
-start_time	Fixation onset (ms from trial start)
+## Project Structure
 
-Installation
-# Clone the repository
-git clone https://github.com/RaanKey/colour-harmony-gaze-entropy.git
-cd colour-harmony-gaze-entropy
+```
+code/
+    config.py                -- Color space constants and transformation matrices
+    color_features.py        -- Color space conversions and feature computation
+    power_analysis.py        -- Simulation-based power analysis
+    analysis_study1.py       -- Study 1 behavioral data analysis
+    analysis_study2.py       -- Study 2 eye-tracking analysis
+    run_all.py               -- Master execution script
+    requirements.txt         -- Python dependencies
+    README.md                -- This file
+```
 
-# Create a virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # macOS/Linux
-# venv\Scripts\activate   # Windows
+## Quick Start
 
-# Install dependencies
+### 1. Install Dependencies
+
+```bash
 pip install -r requirements.txt
-Dependencies
-•Python >= 3.10
-•numpy, pandas, scipy, statsmodels
-•matplotlib, seaborn
-•PyMC >= 5.0 (Bayesian mediation analysis)
-•scikit-learn
+```
 
-Usage
-Run the full analysis pipeline
+### 2. Run the Full Pipeline
+
+```bash
 python run_all.py
-Run individual analysis components
-python analysis_study1.py   # Study 1: preference models, condition contrasts, expertise moderation
-python analysis_study2.py   # Study 2: gaze entropy computation, Bayesian mediation
-python power_analysis.py    # Power analysis for key effects
-Quick start — reproduce H4 mediation
-import pandas as pd
-from scipy import stats
+```
 
-# Load Study 2 trial data
-df = pd.read_csv('data/study2_trial_data.csv')
+For a quick test run with reduced iterations:
 
-# Path a: harmony -> entropy
-a, p_a = stats.pearsonr(df['harmony_score_z'], df['entropy'])
-print(f"Path a: r = {a:.3f}, p = {p_a:.3e}")
+```bash
+python run_all.py --quick
+```
 
-# Path b: entropy -> preference
-b, p_b = stats.pearsonr(df['entropy'], df['preference'])
-print(f"Path b: r = {b:.3f}, p = {p_b:.3f}")
+### 3. Run Individual Analyses
 
-# Indirect effect
-print(f"Indirect effect ab = {a * b:.3f}")
+```python
+# Study 1
+from analysis_study1 import run_all_study1_analyses
+results = run_all_study1_analyses("data/study1_data.csv")
 
-Reproducibility
-All analyses are fully deterministic with random seed = 42. Results reported in the manuscript were produced with:
-•Python 3.10+
-•PyMC 5.10+ (Bayesian models)
-•statsmodels 0.14+ (mixed-effects models)
+# Study 2
+from analysis_study2 import run_all_study2_analyses
+results = run_all_study2_analyses(
+    "data/study2_trial_data.csv",
+    "data/study2_fixation_data.csv"
+)
 
-Citation
-If you use this code or data, please cite:
-@article{wang2025colour,
-  title={The Perceptual Architecture of Aesthetic Choice: How Colour Harmony Shapes Visual Preference Through Gaze Entropy},
-  author={Wang, Haoran and [co-authors]},
-  journal={Nature Human Behaviour},
-  year={2025},
-  note={Under review}
-}
+# Power Analysis
+from power_analysis import run_power_analysis
+results = run_power_analysis()
+```
 
-Ethics
-This study was approved by the [University Name] Ethics Committee (Approval No. YJY-EC-2026-304). All participants provided written informed consent. The study was conducted in accordance with the Declaration of Helsinki.
+## Data Files
 
-License
-This project is licensed under the MIT License — see the LICENSE file for details.
-The data (data/*.csv) are made available for non-commercial research purposes. Please cite the paper if you use the data in your own research.
+The following real collected data files are required:
 
-Contact
-For questions about the code or data, please open an Issue or contact the corresponding author.
+- `study1_data.csv` -- Study 1 behavioral data with columns:
+  - `participant_id`, `stimulus_id`, `condition`, `expertise`
+  - `harmony_score`, `circvar`, `chroma`, `lcontrast`, `deltaE00`
+  - `harmony_score_z`, `circvar_z`, `chroma_z`, `lcontrast_z`, `deltaE00_z`
+  - `preference`, `harmony_rating`, `rt`
+
+- `study2_fixation_data.csv` -- Study 2 fixation data with columns:
+  - `participant_id`, `stimulus_id`, `fixation_id`, `x`, `y`, `duration`, `start_time`
+
+- `study2_trial_data.csv` -- Study 2 trial-level data with columns:
+  - `participant_id`, `stimulus_id`, `harmony_score_z`, `entropy`, `preference`, `expertise`
+
+## Module Descriptions
+
+### config.py
+
+Color space constants including:
+- D65 white point values
+- sRGB <-> CIEXYZ transformation matrices
+- CIELAB 1976 parameters (kappa, epsilon)
+- Cohen-Or harmony template parameters
+- Palette extraction defaults
+
+### color_features.py
+
+Color feature computation pipeline:
+- **Color space conversions**: sRGB <-> linear sRGB <-> CIEXYZ <-> CIELAB
+- **Palette extraction**: k-means++ and median-cut algorithms in CIELAB space
+- **Feature computation**: hue circular variance, mean chroma, lightness contrast, mean DeltaE00, harmony score
+- **Harmony template model**: Cohen-Or et al. (2006) 8-template model with Gaussian fall-off
+
+### analysis_study1.py
+
+Study 1 confirmatory and exploratory analyses:
+- **Primary preference model**: Mixed-effects regression with quadratic feature terms and expertise interactions
+- **H1**: Inverted-U effects via likelihood ratio tests
+- **H2**: Harmony-preference dissociation (correlation + coefficient comparison)
+- **H3**: Expertise moderation (joint F-test + simple slopes)
+- **Re-coloring contrast**: Planned linear contrast (-Harmony vs Original vs +Harmony)
+- **2AFC Bradley-Terry**: Logistic regression for paired comparisons
+- **Robustness checks**: Outlier exclusion, complete cases, polynomial type
+- **Model diagnostics**: Residual plots, QQ plots, normality tests
+- **Random forest**: Feature importance and cross-validated predictions
+
+### analysis_study2.py
+
+Study 2 eye-tracking analyses:
+- **Gaze preprocessing**: I-VT fixation classification
+- **Spatial entropy computation**: 2D histogram + Gaussian smoothing + Shannon entropy
+- **Gaze metrics**: fixation SD, convex hull area, scanpath length, saccade amplitude
+- **H4a**: Gaze-features model (entropy ~ color features)
+- **H4 Bayesian mediation**: PyMC-based multilevel mediation (harmony -> entropy -> preference)
+  - Falls back to bootstrap mediation if PyMC is unavailable
+- **Temporal segmentation**: Windowed entropy analysis
+- **AOI analysis**: Dwell time on high-chroma regions
+- **Exploratory gaze measures**: Secondary gaze metrics as functions of features
+
+### power_analysis.py
+
+Simulation-based power analysis:
+- **Study 1 primary power**: Key pre-registered effects (harmony linear, harmony quadratic, expertise x harmony, expertise x chroma)
+- **Sensitivity analysis**: Power curves varying effect sizes (0.05-0.20), sample sizes (100-200), and trials per participant (60-80)
+- **Study 2 mediation power**: Component-wise power for paths a and b, joint indirect effect
+
+## Key Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| numpy | >=1.24.0 | Numerical computing, color space math |
+| pandas | >=2.0.0 | Data manipulation |
+| scipy | >=1.10.0 | Statistical tests, spatial computations |
+| statsmodels | >=0.14.0 | Mixed-effects models, ANOVA, regression |
+| matplotlib | >=3.7.0 | Plotting |
+| seaborn | >=0.12.0 | Statistical visualization |
+| pymc | >=5.0.0 | Bayesian mediation (optional) |
+| scikit-learn | >=1.3.0 | k-means clustering, random forest |
+| Pillow | >=9.0.0 | Image loading |
+
+## Notes
+
+- The Bayesian mediation in Study 2 will automatically fall back to bootstrap mediation if PyMC is not installed.
+- Random seed is fixed to 42 throughout for reproducibility.
+- All output is saved to `results/` (CSVs) and `figures/` (PNG plots).
